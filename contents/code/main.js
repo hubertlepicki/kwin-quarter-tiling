@@ -661,132 +661,123 @@ function toplevel(screen, desktop) {
     };
 }
 
-// toplevels[screen][desktop]: Toplevel
-var toplevels = [];
-function addAll() {
-    toplevels = [];
-    for (var i = 0; i < workspace.numScreens; i++) {
-        toplevels[i] = [];
-        for (var j = 1; j <= workspace.desktops; j++) {
-            toplevels[i][j] = toplevel(i, j);
-        }
+var ToplevelManager = /** @class */ (function () {
+    function ToplevelManager() {
+        this.toplevels = [];
     }
-}
-function addDesktop(desktop) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        if (toplevels && toplevels[i] && !toplevels[i][desktop]) {
-            toplevels[i][desktop] = toplevel(i, desktop);
-        }
-    }
-}
-function removeDesktop(desktop) {
-    forEachScreen(desktop, function (screen, desktop) {
-        delete toplevels[screen][desktop];
-    });
-}
-function tileClients(clients) {
-    var screens = [];
-    var desktops = [];
-    clients.forEach(function (client) {
-        if (screens.indexOf(client.screen) === -1) {
-            screens.push(client.screen);
-        }
-        if (desktops.indexOf(client.desktop) === -1) {
-            desktops.push(client.desktop);
-        }
-    });
-    screens.forEach(function (screen) {
-        desktops.forEach(function (desktop) {
-            if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-                toplevels[screen][desktop].tileClients(clients.filter(function (client) {
-                    return client.screen === screen && client.desktop === desktop;
-                }));
+    ToplevelManager.prototype.forEach = function (callback) {
+        var _a;
+        for (var i = 0; i < workspace.numScreens; i++) {
+            for (var j = 1; j <= workspace.desktops; j++) {
+                if ((_a = this.toplevels[i]) === null || _a === void 0 ? void 0 : _a[j]) {
+                    var shouldReturn = callback(i, j);
+                    if (shouldReturn) {
+                        return;
+                    }
+                }
             }
-        });
-    });
-}
-function resizeClient(client, previousGeometry) {
-    var screen = client.screen, desktop = client.desktop;
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
-    }
-}
-function maxClients$1(screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return toplevels[screen][desktop].layout.maxClients;
-    }
-    else {
-        return 0;
-    }
-}
-function isFull(clients, screen, desktop) {
-    return clients.length >= maxClients$1(screen, desktop);
-}
-function isEmpty(clients, screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        return clients.length === 0;
-    }
-    else {
-        return false;
-    }
-}
-function forEach(callback) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        for (var j = 1; j <= workspace.desktops; j++) {
-            if (toplevels && toplevels[i] && toplevels[i][j]) {
-                var shouldReturn = callback(i, j);
+        }
+    };
+    ToplevelManager.prototype.forEachScreen = function (desktop, callback) {
+        var _a;
+        for (var i = 0; i < workspace.numScreens; i++) {
+            if ((_a = this.toplevels[i]) === null || _a === void 0 ? void 0 : _a[desktop]) {
+                var shouldReturn = callback(i, desktop);
                 if (shouldReturn) {
                     return;
                 }
             }
         }
-    }
-}
-function forEachScreen(desktop, callback) {
-    for (var i = 0; i < workspace.numScreens; i++) {
-        if (toplevels && toplevels[i] && toplevels[i][desktop]) {
-            var shouldReturn = callback(i, desktop);
-            if (shouldReturn) {
-                return;
+    };
+    ToplevelManager.prototype.forEachDesktop = function (screen, callback) {
+        var _a;
+        for (var i = 1; i <= workspace.desktops; i++) {
+            if ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[i]) {
+                var shouldReturn = callback(screen, i);
+                if (shouldReturn) {
+                    return;
+                }
             }
         }
-    }
-}
-function forEachDesktop(screen, callback) {
-    for (var i = 1; i <= workspace.desktops; i++) {
-        if (toplevels && toplevels[screen] && toplevels[screen][i]) {
-            var shouldReturn = callback(screen, i);
-            if (shouldReturn) {
-                return;
+    };
+    ToplevelManager.prototype.addAll = function () {
+        this.toplevels = [];
+        for (var i = 0; i < workspace.numScreens; i++) {
+            this.toplevels[i] = [];
+            for (var j = 1; j <= workspace.desktops; j++) {
+                this.toplevels[i][j] = toplevel(i, j);
             }
         }
-    }
-}
-function restoreLayout(screen, desktop) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.restore();
-    }
-}
-function adjustMaxClients(screen, desktop, amount) {
-    if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].layout.maxClients += amount;
-    }
-}
-var toplevelManager = {
-    addAll: addAll,
-    addDesktop: addDesktop,
-    removeDesktop: removeDesktop,
-    tileClients: tileClients,
-    resizeClient: resizeClient,
-    maxClients: maxClients$1,
-    isFull: isFull,
-    isEmpty: isEmpty,
-    forEach: forEach,
-    forEachScreen: forEachScreen,
-    forEachDesktop: forEachDesktop,
-    restoreLayout: restoreLayout,
-    adjustMaxClients: adjustMaxClients,
-};
+    };
+    ToplevelManager.prototype.addDesktop = function (desktop) {
+        for (var i = 0; i < workspace.numScreens; i++) {
+            if (this.toplevels && this.toplevels[i] && !this.toplevels[i][desktop]) {
+                this.toplevels[i][desktop] = toplevel(i, desktop);
+            }
+        }
+    };
+    ToplevelManager.prototype.removeDesktop = function (desktop) {
+        var _this = this;
+        this.forEachScreen(desktop, function (screen, desktop) {
+            delete _this.toplevels[screen][desktop];
+        });
+    };
+    ToplevelManager.prototype.restoreLayout = function (screen, desktop) {
+        var _a;
+        if ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) {
+            this.toplevels[screen][desktop].layout.restore();
+        }
+    };
+    ToplevelManager.prototype.maxClients = function (screen, desktop) {
+        var _a;
+        return ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) ? this.toplevels[screen][desktop].layout.maxClients : 0;
+    };
+    ToplevelManager.prototype.adjustMaxClients = function (screen, desktop, amount) {
+        var _a;
+        if ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) {
+            this.toplevels[screen][desktop].layout.maxClients += amount;
+        }
+    };
+    ToplevelManager.prototype.isFull = function (clients, screen, desktop) {
+        return clients.length >= this.maxClients(screen, desktop);
+    };
+    ToplevelManager.prototype.isEmpty = function (clients, screen, desktop) {
+        var _a;
+        return ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) && clients.length === 0 ? true : false;
+    };
+    ToplevelManager.prototype.tileClients = function (clients) {
+        var _this = this;
+        var screens = [];
+        var desktops = [];
+        clients.forEach(function (client) {
+            if (screens.indexOf(client.screen) === -1) {
+                screens.push(client.screen);
+            }
+            if (desktops.indexOf(client.desktop) === -1) {
+                desktops.push(client.desktop);
+            }
+        });
+        screens.forEach(function (screen) {
+            desktops.forEach(function (desktop) {
+                var _a;
+                if ((_a = _this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) {
+                    _this.toplevels[screen][desktop].tileClients(clients.filter(function (client) {
+                        return client.screen === screen && client.desktop === desktop;
+                    }));
+                }
+            });
+        });
+    };
+    ToplevelManager.prototype.resizeClient = function (client, previousGeometry) {
+        var _a;
+        var screen = client.screen, desktop = client.desktop;
+        if ((_a = this.toplevels[screen]) === null || _a === void 0 ? void 0 : _a[desktop]) {
+            this.toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
+        }
+    };
+    return ToplevelManager;
+}());
+var ToplevelManager$1 = new ToplevelManager();
 
 var clients = [];
 var disabled = {};
@@ -849,8 +840,8 @@ function addWithForce(client) {
         // If the client couldn't be added on its screen or desktop, finds an available screen and desktop for it
         if (find(client) === -1) {
             var freeScreen = -1;
-            toplevelManager.forEachScreen(client.desktop, function (screen, desktop) {
-                if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+            ToplevelManager$1.forEachScreen(client.desktop, function (screen, desktop) {
+                if (!ToplevelManager$1.isFull(filter(screen, desktop), screen, desktop)) {
                     freeScreen = screen;
                     return true;
                 }
@@ -861,8 +852,8 @@ function addWithForce(client) {
             }
             else {
                 var freeDesktop = -1;
-                toplevelManager.forEach(function (screen, desktop) {
-                    if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+                ToplevelManager$1.forEach(function (screen, desktop) {
+                    if (!ToplevelManager$1.isFull(filter(screen, desktop), screen, desktop)) {
                         freeScreen = screen;
                         freeDesktop = desktop;
                         if (config.followClients) {
@@ -880,7 +871,7 @@ function addWithForce(client) {
         }
     }
 }
-function addAll$1() {
+function addAll() {
     if (config.autoTile) {
         workspace.clientList().forEach(function (client) { return add(client); });
     }
@@ -973,23 +964,23 @@ function swap(i, j) {
     clients[j] = t;
 }
 function resize(client, previousGeometry) {
-    toplevelManager.resizeClient(client, previousGeometry);
+    ToplevelManager$1.resizeClient(client, previousGeometry);
 }
 function tileAll(screen, desktop) {
     var includedClients = filter(screen, desktop);
     // Removes extra clients that exist on the toplevel
-    while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
+    while (includedClients.length > ToplevelManager$1.maxClients(screen, desktop)) {
         var removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
         remove(removableClient);
     }
-    toplevelManager.tileClients(includedClients);
+    ToplevelManager$1.tileClients(includedClients);
 }
 function enable(client) {
     if (disabled[client.windowId]) {
         var _a = disabled[client.windowId], index = _a.index, screen_1 = _a.screen, desktop = _a.desktop, disconnect = _a.disconnect;
         delete disabled[client.windowId];
         disconnect();
-        toplevelManager.adjustMaxClients(screen_1, desktop, 1);
+        ToplevelManager$1.adjustMaxClients(screen_1, desktop, 1);
         return index;
     }
     else {
@@ -1010,13 +1001,13 @@ function disable(client, index, shouldNotFollow) {
                 client.shadeChanged.disconnect(addClient_1);
             },
         };
-        toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
+        ToplevelManager$1.adjustMaxClients(client.screen, client.desktop, -1);
     }
 }
 var clientManager = {
     add: add,
     addWithForce: addWithForce,
-    addAll: addAll$1,
+    addAll: addAll,
     find: find,
     filter: filter,
     disable: disable,
@@ -1050,12 +1041,12 @@ registerShortcut ||
     };
 function registerShortcuts() {
     registerShortcut("Quarter: Reset Current Layout", "Quarter: Reset Current Layout", "Meta+R", function () {
-        toplevelManager.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
+        ToplevelManager$1.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
         clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
     });
     registerShortcut("Quarter: Reset All Layouts", "Quarter: Reset All Layout", "Meta+Shift+R", function () {
-        toplevelManager.forEach(function (screen, desktop) {
-            toplevelManager.restoreLayout(screen, desktop);
+        ToplevelManager$1.forEach(function (screen, desktop) {
+            ToplevelManager$1.restoreLayout(screen, desktop);
             clientManager.tileAll(screen, desktop);
         });
     });
@@ -1249,17 +1240,17 @@ function registerSignals() {
     });
     workspace.numberDesktopsChanged.connect(function (previousDesktops) {
         if (workspace.desktops > previousDesktops) {
-            toplevelManager.addDesktop(workspace.desktops);
+            ToplevelManager$1.addDesktop(workspace.desktops);
         }
         else {
-            toplevelManager.removeDesktop(previousDesktops);
+            ToplevelManager$1.removeDesktop(previousDesktops);
         }
-        toplevelManager.forEachScreen(workspace.currentDesktop, function (screen, desktop) {
+        ToplevelManager$1.forEachScreen(workspace.currentDesktop, function (screen, desktop) {
             clientManager.tileAll(screen, desktop);
         });
     });
     workspace.numberScreensChanged.connect(function (count) {
-        toplevelManager.addAll();
+        ToplevelManager$1.addAll();
     });
     workspace.screenResized.connect(function (screen) {
         clientManager.tileAll(screen, workspace.currentDesktop);
@@ -1271,7 +1262,7 @@ var signals = {
 
 // @ts-ignore, KWin global
 var print = print || {};
-toplevelManager.addAll();
+ToplevelManager$1.addAll();
 clientManager.addAll();
 shortcuts.registerShortcuts();
 signals.registerSignals();

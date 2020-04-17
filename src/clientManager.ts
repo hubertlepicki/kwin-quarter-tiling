@@ -2,7 +2,7 @@ import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
 import { Geometry, geometryUtils } from "./geometry";
-import { toplevelManager } from "./toplevelManager";
+import ToplevelManager from "./toplevelManager";
 import { workspace } from "./workspace";
 
 const clients: Array<Client> = [];
@@ -85,8 +85,8 @@ function addWithForce(client: Client): void {
     if (find(client) === -1) {
       var freeScreen = -1;
 
-      toplevelManager.forEachScreen(client.desktop, (screen: number, desktop: number) => {
-        if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+      ToplevelManager.forEachScreen(client.desktop, (screen: number, desktop: number) => {
+        if (!ToplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
           freeScreen = screen;
           return true;
         }
@@ -98,8 +98,8 @@ function addWithForce(client: Client): void {
       } else {
         var freeDesktop = -1;
 
-        toplevelManager.forEach((screen: number, desktop: number) => {
-          if (!toplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
+        ToplevelManager.forEach((screen: number, desktop: number) => {
+          if (!ToplevelManager.isFull(filter(screen, desktop), screen, desktop)) {
             freeScreen = screen;
             freeDesktop = desktop;
             if (config.followClients) {
@@ -230,19 +230,19 @@ function swap(i: number, j: number) {
 }
 
 function resize(client: Client, previousGeometry: Geometry) {
-  toplevelManager.resizeClient(client, previousGeometry);
+  ToplevelManager.resizeClient(client, previousGeometry);
 }
 
 function tileAll(screen: number, desktop: number) {
   const includedClients = filter(screen, desktop);
 
   // Removes extra clients that exist on the toplevel
-  while (includedClients.length > toplevelManager.maxClients(screen, desktop)) {
+  while (includedClients.length > ToplevelManager.maxClients(screen, desktop)) {
     const removableClient = includedClients.splice(includedClients.length - 1, 1)[0];
     remove(removableClient);
   }
 
-  toplevelManager.tileClients(includedClients);
+  ToplevelManager.tileClients(includedClients);
 }
 
 function enable(client: Client) {
@@ -250,7 +250,7 @@ function enable(client: Client) {
     const { index, screen, desktop, disconnect } = disabled[client.windowId];
     delete disabled[client.windowId];
     disconnect();
-    toplevelManager.adjustMaxClients(screen, desktop, 1);
+    ToplevelManager.adjustMaxClients(screen, desktop, 1);
     return index;
   } else {
     return -1;
@@ -275,7 +275,7 @@ function disable(client: Client, index?: number, shouldNotFollow?: boolean) {
       },
     };
 
-    toplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
+    ToplevelManager.adjustMaxClients(client.screen, client.desktop, -1);
   }
 }
 

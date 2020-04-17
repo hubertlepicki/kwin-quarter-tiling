@@ -1,7 +1,7 @@
 import { Client } from "./client";
 import { clientManager } from "./clientManager";
 import { config } from "./config";
-import { toplevelManager } from "./toplevelManager";
+import ToplevelManager from "./toplevelManager";
 import { workspace } from "./workspace";
 
 export function registerSignals(): void {
@@ -66,18 +66,18 @@ export function registerSignals(): void {
 
   workspace.numberDesktopsChanged.connect((previousDesktops: number) => {
     if (workspace.desktops > previousDesktops) {
-      toplevelManager.addDesktop(workspace.desktops);
+      ToplevelManager.addDesktop(workspace.desktops);
     } else {
-      toplevelManager.removeDesktop(previousDesktops);
+      ToplevelManager.removeDesktop(previousDesktops);
     }
 
-    toplevelManager.forEachScreen(workspace.currentDesktop, (screen: number, desktop: number) => {
+    ToplevelManager.forEachScreen(workspace.currentDesktop, (screen: number, desktop: number) => {
       clientManager.tileAll(screen, desktop);
     });
   });
 
   workspace.numberScreensChanged.connect((count: number) => {
-    toplevelManager.addAll();
+    ToplevelManager.addAll();
   });
 
   workspace.screenResized.connect((screen: number) => {

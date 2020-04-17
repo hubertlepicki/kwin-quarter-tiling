@@ -2,7 +2,7 @@ import { Client } from "./client";
 import { clientManager } from "./clientManager";
 import { gaps } from "./gaps";
 import { Direction, geometryUtils } from "./geometry";
-import { toplevelManager } from "./toplevelManager";
+import ToplevelManager from "./toplevelManager";
 import { workspace } from "./workspace";
 
 const resizeStep = 20;
@@ -17,13 +17,13 @@ const registerShortcut: (name: string, description: string, key: string, cb: () 
 
 function registerShortcuts(): void {
   registerShortcut("Quarter: Reset Current Layout", "Quarter: Reset Current Layout", "Meta+R", () => {
-    toplevelManager.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
+    ToplevelManager.restoreLayout(workspace.activeScreen, workspace.currentDesktop);
     clientManager.tileAll(workspace.activeScreen, workspace.currentDesktop);
   });
 
   registerShortcut("Quarter: Reset All Layouts", "Quarter: Reset All Layout", "Meta+Shift+R", () => {
-    toplevelManager.forEach((screen: number, desktop: number) => {
-      toplevelManager.restoreLayout(screen, desktop);
+    ToplevelManager.forEach((screen: number, desktop: number) => {
+      ToplevelManager.restoreLayout(screen, desktop);
       clientManager.tileAll(screen, desktop);
     });
   });

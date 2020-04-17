@@ -3,146 +3,124 @@ import { Geometry } from "./geometry";
 import { Toplevel, toplevel } from "./toplevel";
 import { workspace } from "./workspace";
 
-// toplevels[screen][desktop]: Toplevel
-let toplevels: Array<Array<Toplevel | null>> = [];
+class ToplevelManager {
+  toplevels: Array<Array<Toplevel>> = [];
 
-function addAll(): void {
-  toplevels = [];
-  for (var i = 0; i < workspace.numScreens; i++) {
-    toplevels[i] = [];
-    for (var j = 1; j <= workspace.desktops; j++) {
-      toplevels[i][j] = toplevel(i, j);
-    }
-  }
-}
-
-function addDesktop(desktop: number): void {
-  for (var i = 0; i < workspace.numScreens; i++) {
-    if (toplevels && toplevels[i] && !toplevels[i][desktop]) {
-      toplevels[i][desktop] = toplevel(i, desktop);
-    }
-  }
-}
-
-function removeDesktop(desktop: number): void {
-  forEachScreen(desktop, (screen: number, desktop: number): void => {
-    delete toplevels[screen][desktop];
-  });
-}
-
-function tileClients(clients: Array<Client>) {
-  const screens = [];
-  const desktops = [];
-
-  clients.forEach((client: Client) => {
-    if (screens.indexOf(client.screen) === -1) {
-      screens.push(client.screen);
-    }
-    if (desktops.indexOf(client.desktop) === -1) {
-      desktops.push(client.desktop);
-    }
-  });
-
-  screens.forEach((screen: number) => {
-    desktops.forEach((desktop: number) => {
-      if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-        toplevels[screen][desktop].tileClients(
-          clients.filter((client: Client) => {
-            return client.screen === screen && client.desktop === desktop;
-          })
-        );
+  forEach(callback: (screen: number, desktop: number) => boolean | void): void {
+    for (var i = 0; i < workspace.numScreens; i++) {
+      for (var j = 1; j <= workspace.desktops; j++) {
+        if (this.toplevels[i]?.[j]) {
+          const shouldReturn = callback(i, j);
+          if (shouldReturn) {
+            return;
+          }
+        }
       }
-    });
-  });
-}
-
-function resizeClient(client: Client, previousGeometry: Geometry) {
-  const { screen, desktop } = client;
-
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
+    }
   }
-}
 
-function maxClients(screen: number, desktop: number): number {
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    return toplevels[screen][desktop].layout.maxClients;
-  } else {
-    return 0;
-  }
-}
-
-function isFull(clients: Array<Client>, screen: number, desktop: number): boolean {
-  return clients.length >= maxClients(screen, desktop);
-}
-
-function isEmpty(clients: Array<Client>, screen: number, desktop: number): boolean {
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    return clients.length === 0;
-  } else {
-    return false;
-  }
-}
-
-function forEach(callback: (screen: number, desktop: number) => boolean | void): void {
-  for (var i = 0; i < workspace.numScreens; i++) {
-    for (var j = 1; j <= workspace.desktops; j++) {
-      if (toplevels && toplevels[i] && toplevels[i][j]) {
-        const shouldReturn = callback(i, j);
+  forEachScreen(desktop: number, callback: (screen: number, desktop: number) => boolean | void): void {
+    for (var i = 0; i < workspace.numScreens; i++) {
+      if (this.toplevels[i]?.[desktop]) {
+        const shouldReturn = callback(i, desktop);
         if (shouldReturn) {
           return;
         }
       }
     }
   }
-}
 
-function forEachScreen(desktop: number, callback: (screen: number, desktop: number) => boolean | void): void {
-  for (var i = 0; i < workspace.numScreens; i++) {
-    if (toplevels && toplevels[i] && toplevels[i][desktop]) {
-      const shouldReturn = callback(i, desktop);
-      if (shouldReturn) {
-        return;
+  forEachDesktop(screen: number, callback: (screen: number, desktop: number) => boolean | void): void {
+    for (var i = 1; i <= workspace.desktops; i++) {
+      if (this.toplevels[screen]?.[i]) {
+        const shouldReturn = callback(screen, i);
+        if (shouldReturn) {
+          return;
+        }
       }
+    }
+  }
+
+  addAll(): void {
+    this.toplevels = [];
+    for (var i = 0; i < workspace.numScreens; i++) {
+      this.toplevels[i] = [];
+      for (var j = 1; j <= workspace.desktops; j++) {
+        this.toplevels[i][j] = toplevel(i, j);
+      }
+    }
+  }
+
+  addDesktop(desktop: number): void {
+    for (var i = 0; i < workspace.numScreens; i++) {
+      if (this.toplevels && this.toplevels[i] && !this.toplevels[i][desktop]) {
+        this.toplevels[i][desktop] = toplevel(i, desktop);
+      }
+    }
+  }
+
+  removeDesktop(desktop: number): void {
+    this.forEachScreen(desktop, (screen: number, desktop: number): void => {
+      delete this.toplevels[screen][desktop];
+    });
+  }
+
+  restoreLayout(screen: number, desktop: number) {
+    if (this.toplevels[screen]?.[desktop]) {
+      this.toplevels[screen][desktop].layout.restore();
+    }
+  }
+
+  maxClients(screen: number, desktop: number): number {
+    return this.toplevels[screen]?.[desktop] ? this.toplevels[screen][desktop].layout.maxClients : 0;
+  }
+
+  adjustMaxClients(screen: number, desktop: number, amount: number) {
+    if (this.toplevels[screen]?.[desktop]) {
+      this.toplevels[screen][desktop].layout.maxClients += amount;
+    }
+  }
+
+  isFull(clients: Array<Client>, screen: number, desktop: number): boolean {
+    return clients.length >= this.maxClients(screen, desktop);
+  }
+
+  isEmpty(clients: Array<Client>, screen: number, desktop: number): boolean {
+    return this.toplevels[screen]?.[desktop] && clients.length === 0 ? true : false;
+  }
+
+  tileClients(clients: Array<Client>) {
+    const screens = [];
+    const desktops = [];
+
+    clients.forEach((client: Client) => {
+      if (screens.indexOf(client.screen) === -1) {
+        screens.push(client.screen);
+      }
+      if (desktops.indexOf(client.desktop) === -1) {
+        desktops.push(client.desktop);
+      }
+    });
+
+    screens.forEach((screen: number) => {
+      desktops.forEach((desktop: number) => {
+        if (this.toplevels[screen]?.[desktop]) {
+          this.toplevels[screen][desktop].tileClients(
+            clients.filter((client: Client) => {
+              return client.screen === screen && client.desktop === desktop;
+            })
+          );
+        }
+      });
+    });
+  }
+
+  resizeClient(client: Client, previousGeometry: Geometry) {
+    const { screen, desktop } = client;
+    if (this.toplevels[screen]?.[desktop]) {
+      this.toplevels[screen][desktop].layout.resizeClient(client, previousGeometry);
     }
   }
 }
 
-function forEachDesktop(screen: number, callback: (screen: number, desktop: number) => boolean | void): void {
-  for (var i = 1; i <= workspace.desktops; i++) {
-    if (toplevels && toplevels[screen] && toplevels[screen][i]) {
-      const shouldReturn = callback(screen, i);
-      if (shouldReturn) {
-        return;
-      }
-    }
-  }
-}
-
-function restoreLayout(screen: number, desktop: number) {
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    toplevels[screen][desktop].layout.restore();
-  }
-}
-
-function adjustMaxClients(screen: number, desktop: number, amount: number) {
-  if (toplevels && toplevels[screen] && toplevels[screen][desktop]) {
-    toplevels[screen][desktop].layout.maxClients += amount;
-  }
-}
-
-export const toplevelManager = {
-  addAll,
-  addDesktop,
-  removeDesktop,
-  tileClients,
-  resizeClient,
-  maxClients,
-  isFull,
-  isEmpty,
-  forEach,
-  forEachScreen,
-  forEachDesktop,
-  restoreLayout,
-  adjustMaxClients,
-};
+export default new ToplevelManager();
