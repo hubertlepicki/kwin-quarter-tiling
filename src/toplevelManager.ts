@@ -1,6 +1,7 @@
 import { Client } from "./client";
 import { Geometry } from "./geometry";
-import { Toplevel, toplevel } from "./toplevel";
+import Toplevel from "./toplevel";
+import { config } from "./config";
 import { workspace } from "./workspace";
 
 class ToplevelManager {
@@ -44,17 +45,23 @@ class ToplevelManager {
   addAll(): void {
     this.toplevels = [];
     for (var i = 0; i < workspace.numScreens; i++) {
-      this.toplevels[i] = [];
-      for (var j = 1; j <= workspace.desktops; j++) {
-        this.toplevels[i][j] = toplevel(i, j);
+      if (!config.isIgnoredScreen(i)) {
+        this.toplevels[i] = [];
+        for (var j = 1; j <= workspace.desktops; j++) {
+          if (!config.isIgnoredDesktop(j)) {
+            this.toplevels[i][j] = new Toplevel(i, j);
+          }
+        }
       }
     }
   }
 
   addDesktop(desktop: number): void {
-    for (var i = 0; i < workspace.numScreens; i++) {
-      if (this.toplevels && this.toplevels[i] && !this.toplevels[i][desktop]) {
-        this.toplevels[i][desktop] = toplevel(i, desktop);
+    if (!config.isIgnoredDesktop(desktop)) {
+      for (var i = 0; i < workspace.numScreens; i++) {
+        if (this.toplevels[i] && !this.toplevels[i][desktop]) {
+          this.toplevels[i][desktop] = new Toplevel(i, desktop);
+        }
       }
     }
   }

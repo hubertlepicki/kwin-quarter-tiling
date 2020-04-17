@@ -154,24 +154,6 @@ function clone(geometry) {
 function distance(geometryA, geometryB) {
     return Math.abs(geometryA.x - geometryB.x) + Math.abs(geometryA.y - geometryB.y);
 }
-function gapArea(geometry) {
-    var size = gaps$1.size;
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    x += size;
-    y += size;
-    width -= size * 2;
-    height -= size * 2;
-    return { x: x, y: y, width: width, height: height };
-}
-function fullArea(geometry) {
-    var size = gaps$1.size;
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    x -= size;
-    y -= size;
-    width += size * 2;
-    height += size * 2;
-    return { x: x, y: y, width: width, height: height };
-}
 function moveTo(geometryA, geometryB) {
     var geometryC = clone(geometryB);
     geometryC.height = geometryA.height;
@@ -183,13 +165,30 @@ function center(geometryA, geometryB) {
     geometryB.y += geometryB.height * 0.5 - geometryA.height * 0.5;
     return moveTo(geometryA, geometryB);
 }
+function withGaps(geometry) {
+    var size = gaps$1.size;
+    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+    x += size;
+    y += size;
+    width -= size * 2;
+    height -= size * 2;
+    return { x: x, y: y, width: width, height: height };
+}
+function withMargins(geometry) {
+    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
+    y += gaps$1.size + config.margins.top;
+    x += gaps$1.size + config.margins.left;
+    height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
+    width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
+    return { x: x, y: y, width: width, height: height };
+}
 var geometryUtils = {
     clone: clone,
     distance: distance,
-    gapArea: gapArea,
-    fullArea: fullArea,
     moveTo: moveTo,
     center: center,
+    withGaps: withGaps,
+    withMargins: withMargins,
 };
 
 function getTiles(geometry, separators, count) {
@@ -251,7 +250,7 @@ function QuarterHorizontal(geometry) {
         var tiles = getTiles(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
+            client.geometry = geometryUtils.withGaps(tile);
         });
     }
     function resizeClient(client, previousGeometry) {
@@ -359,7 +358,7 @@ function QuarterSingleHorizontal(geometry) {
         var tiles = getTiles$1(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
+            client.geometry = geometryUtils.withGaps(tile);
         });
     }
     function resizeClient(client, previousGeometry) {
@@ -454,7 +453,7 @@ function QuarterSingleVertical(geometry) {
         var tiles = getTiles$2(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
+            client.geometry = geometryUtils.withGaps(tile);
         });
     }
     function resizeClient(client, previousGeometry) {
@@ -549,7 +548,7 @@ function QuarterVertical(geometry) {
         var tiles = getTiles$3(geometry, separators, includedClients.length);
         includedClients.forEach(function (client, index) {
             var tile = tiles[index];
-            client.geometry = geometryUtils.gapArea(tile);
+            client.geometry = geometryUtils.withGaps(tile);
         });
     }
     function resizeClient(client, previousGeometry) {
@@ -617,49 +616,35 @@ var layouts = {
 };
 
 var SelectedLayout = layouts[config.layout];
-function availableArea(geometry) {
-    var x = geometry.x, y = geometry.y, width = geometry.width, height = geometry.height;
-    y += gaps$1.size + config.margins.top;
-    x += gaps$1.size + config.margins.left;
-    height -= gaps$1.size * 2 + config.margins.top + config.margins.bottom;
-    width -= gaps$1.size * 2 + config.margins.left + config.margins.right;
-    return { x: x, y: y, width: width, height: height };
-}
-function toplevel(screen, desktop) {
-    if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
-        return null;
-    }
-    // Geometry
-    var geometry = availableArea(workspace.clientArea(2, screen, desktop));
-    function hasGeometryChanged(newGeometry) {
-        return (geometry.x !== newGeometry.x ||
-            geometry.y !== newGeometry.y ||
-            geometry.width !== newGeometry.width ||
-            geometry.height !== newGeometry.height);
-    }
-    function onGeometryChanged(newGeometry) {
-        geometry = newGeometry;
-        layout.adjustGeometry(newGeometry);
-    }
-    // Layout
-    var layout = SelectedLayout(geometry);
-    if (config.maxClients > -1) {
-        layout.maxClients = Math.min(layout.maxClients, config.maxClients);
-    }
-    function tileClients(clients) {
-        var currentGeometry = availableArea(workspace.clientArea(2, screen, desktop));
-        if (hasGeometryChanged(currentGeometry)) {
-            onGeometryChanged(currentGeometry);
+var Toplevel = /** @class */ (function () {
+    function Toplevel(screen, desktop) {
+        this.screen = screen;
+        this.desktop = desktop;
+        this.geometry = geometryUtils.withMargins(workspace.clientArea(2, screen, desktop));
+        this.layout = SelectedLayout(this.geometry);
+        if (config.maxClients > -1) {
+            this.layout.maxClients = Math.min(this.layout.maxClients, config.maxClients);
         }
-        layout.tileClients(clients);
     }
-    return {
-        screen: screen,
-        desktop: desktop,
-        layout: layout,
-        tileClients: tileClients,
+    Toplevel.prototype.hasGeometryChanged = function (newGeometry) {
+        return (this.geometry.x !== newGeometry.x ||
+            this.geometry.y !== newGeometry.y ||
+            this.geometry.width !== newGeometry.width ||
+            this.geometry.height !== newGeometry.height);
     };
-}
+    Toplevel.prototype.onGeometryChanged = function (newGeometry) {
+        this.geometry = newGeometry;
+        this.layout.adjustGeometry(newGeometry);
+    };
+    Toplevel.prototype.tileClients = function (clients) {
+        var currentGeometry = geometryUtils.withMargins(workspace.clientArea(2, this.screen, this.desktop));
+        if (this.hasGeometryChanged(currentGeometry)) {
+            this.onGeometryChanged(currentGeometry);
+        }
+        this.layout.tileClients(clients);
+    };
+    return Toplevel;
+}());
 
 var ToplevelManager = /** @class */ (function () {
     function ToplevelManager() {
@@ -703,16 +688,22 @@ var ToplevelManager = /** @class */ (function () {
     ToplevelManager.prototype.addAll = function () {
         this.toplevels = [];
         for (var i = 0; i < workspace.numScreens; i++) {
-            this.toplevels[i] = [];
-            for (var j = 1; j <= workspace.desktops; j++) {
-                this.toplevels[i][j] = toplevel(i, j);
+            if (!config.isIgnoredScreen(i)) {
+                this.toplevels[i] = [];
+                for (var j = 1; j <= workspace.desktops; j++) {
+                    if (!config.isIgnoredDesktop(j)) {
+                        this.toplevels[i][j] = new Toplevel(i, j);
+                    }
+                }
             }
         }
     };
     ToplevelManager.prototype.addDesktop = function (desktop) {
-        for (var i = 0; i < workspace.numScreens; i++) {
-            if (this.toplevels && this.toplevels[i] && !this.toplevels[i][desktop]) {
-                this.toplevels[i][desktop] = toplevel(i, desktop);
+        if (!config.isIgnoredDesktop(desktop)) {
+            for (var i = 0; i < workspace.numScreens; i++) {
+                if (this.toplevels[i] && !this.toplevels[i][desktop]) {
+                    this.toplevels[i][desktop] = new Toplevel(i, desktop);
+                }
             }
         }
     };

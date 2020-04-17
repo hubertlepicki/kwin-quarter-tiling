@@ -1,75 +1,52 @@
 import { Client } from "./client";
 import { config } from "./config";
-import { gaps } from "./gaps";
-import { Geometry } from "./geometry";
+import { Geometry, geometryUtils } from "./geometry";
 import { Layout } from "./layout";
 import { layouts } from "./layouts/layouts";
 import { workspace } from "./workspace";
 
 const SelectedLayout = layouts[config.layout];
 
-export interface Toplevel {
+export default class Toplevel {
   screen: number;
   desktop: number;
+
+  geometry: Geometry;
   layout: Layout;
-  tileClients: (clients: Array<Client>) => void;
-}
 
-function availableArea(geometry: Geometry): Geometry {
-  var { x, y, width, height } = geometry;
+  constructor(screen: number, desktop: number) {
+    this.screen = screen;
+    this.desktop = desktop;
 
-  y += gaps.size + config.margins.top;
-  x += gaps.size + config.margins.left;
+    this.geometry = geometryUtils.withMargins(workspace.clientArea(2, screen, desktop));
 
-  height -= gaps.size * 2 + config.margins.top + config.margins.bottom;
-  width -= gaps.size * 2 + config.margins.left + config.margins.right;
-
-  return { x, y, width, height };
-}
-
-export function toplevel(screen: number, desktop: number): Toplevel | null {
-  if (config.isIgnoredScreen(screen) || config.isIgnoredDesktop(desktop)) {
-    return null;
+    this.layout = SelectedLayout(this.geometry);
+    if (config.maxClients > -1) {
+      this.layout.maxClients = Math.min(this.layout.maxClients, config.maxClients);
+    }
   }
 
-  // Geometry
-  var geometry = availableArea(workspace.clientArea(2, screen, desktop));
-
-  function hasGeometryChanged(newGeometry: Geometry) {
+  hasGeometryChanged(newGeometry: Geometry) {
     return (
-      geometry.x !== newGeometry.x ||
-      geometry.y !== newGeometry.y ||
-      geometry.width !== newGeometry.width ||
-      geometry.height !== newGeometry.height
+      this.geometry.x !== newGeometry.x ||
+      this.geometry.y !== newGeometry.y ||
+      this.geometry.width !== newGeometry.width ||
+      this.geometry.height !== newGeometry.height
     );
   }
 
-  function onGeometryChanged(newGeometry: Geometry) {
-    geometry = newGeometry;
-    layout.adjustGeometry(newGeometry);
+  onGeometryChanged(newGeometry: Geometry) {
+    this.geometry = newGeometry;
+    this.layout.adjustGeometry(newGeometry);
   }
 
-  // Layout
-  var layout = SelectedLayout(geometry);
+  tileClients(clients: Array<Client>): void {
+    const currentGeometry = geometryUtils.withMargins(workspace.clientArea(2, this.screen, this.desktop));
 
-  if (config.maxClients > -1) {
-    layout.maxClients = Math.min(layout.maxClients, config.maxClients);
-  }
-
-  function tileClients(clients: Array<Client>): void {
-    const currentGeometry = availableArea(workspace.clientArea(2, screen, desktop));
-
-    if (hasGeometryChanged(currentGeometry)) {
-      onGeometryChanged(currentGeometry);
+    if (this.hasGeometryChanged(currentGeometry)) {
+      this.onGeometryChanged(currentGeometry);
     }
 
-    layout.tileClients(clients);
+    this.layout.tileClients(clients);
   }
-
-  return {
-    screen,
-    desktop,
-    layout,
-    tileClients,
-  };
 }

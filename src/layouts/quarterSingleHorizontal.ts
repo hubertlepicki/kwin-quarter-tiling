@@ -82,7 +82,7 @@ export function QuarterSingleHorizontal(geometry: Geometry): QuarterSingleHorizo
 
     includedClients.forEach((client: Client, index: number) => {
       const tile = tiles[index];
-      client.geometry = geometryUtils.gapArea(tile);
+      client.geometry = geometryUtils.withGaps(tile);
     });
   }
 
