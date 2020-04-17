@@ -23,5 +23,5 @@ export const gaps = {
   decrease,
   get size() {
     return size;
-  }
+  },
 };

@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 var __spreadArrays = (undefined && undefined.__spreadArrays) || function () {
     for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
     for (var r = Array(s), k = 0, i = 0; i < il; i++)
@@ -16,6 +18,9 @@ readConfig ||
 function readConfigString(key, defaultValue) {
     return readConfig(key, defaultValue).toString();
 }
+// Ignored
+var minWidth = readConfig("minWidth", 256);
+var minHeight = readConfig("minHeight", 256);
 var ignoredClients = __spreadArrays([
     "albert",
     "kazam",
@@ -43,26 +48,27 @@ var ignoredCaptions = __spreadArrays([
     .split(", ")
     .filter(function (caption) { return caption; }));
 var ignoredDesktops = readConfigString("ignoredDesktops", "").split(", ");
-var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
 function isIgnoredDesktop(desktop) {
     return ignoredDesktops.indexOf(desktop.toString()) > -1;
 }
+var ignoredScreens = readConfigString("ignoredScreens", "").split(", ");
 function isIgnoredScreen(screen) {
     return ignoredScreens.indexOf(screen.toString()) > -1;
 }
-var minWidth = readConfig("minWidth", 256);
-var minHeight = readConfig("minHeight", 256);
-var gaps = readConfig("gap", 8);
-var maxClients = readConfig("maxClients", -1);
-var autoTile = readConfigString("autoTile", true) === "true";
-var followClients = readConfigString("followClients", true) === "true";
+// Layout
 var layout = readConfigString("layout", 0);
+var maxClients = readConfig("maxClients", -1);
+// Geometry
+var gaps = readConfig("gap", 8);
 var margins = {
     top: readConfig("marginTop", 0),
     left: readConfig("marginLeft", 0),
     bottom: readConfig("marginBottom", 0),
-    right: readConfig("marginRight", 0)
+    right: readConfig("marginRight", 0),
 };
+// Other options
+var autoTile = readConfigString("autoTile", true) === "true";
+var followClients = readConfigString("followClients", true) === "true";
 var config = {
     ignoredCaptions: ignoredCaptions,
     ignoredClients: ignoredClients,
@@ -77,10 +83,9 @@ var config = {
     margins: margins,
     autoTile: autoTile,
     followClients: followClients,
-    layout: layout
+    layout: layout,
 };
 
-// @ts-ignore, KWin global
 // @ts-ignore, KWin global
 var workspace = workspace || {};
 
@@ -139,7 +144,7 @@ var gaps$1 = {
     decrease: decrease,
     get size() {
         return size;
-    }
+    },
 };
 
 function clone(geometry) {
@@ -184,7 +189,7 @@ var geometryUtils = {
     gapArea: gapArea,
     fullArea: fullArea,
     moveTo: moveTo,
-    center: center
+    center: center,
 };
 
 function getTiles(geometry, separators, count) {
@@ -1185,7 +1190,7 @@ function registerShortcuts() {
     });
 }
 var shortcuts = {
-    registerShortcuts: registerShortcuts
+    registerShortcuts: registerShortcuts,
 };
 
 function registerSignals() {
@@ -1264,7 +1269,11 @@ var signals = {
     registerSignals: registerSignals,
 };
 
+// @ts-ignore, KWin global
+var print = print || {};
 toplevelManager.addAll();
 clientManager.addAll();
 shortcuts.registerShortcuts();
 signals.registerSignals();
+
+exports.print = print;

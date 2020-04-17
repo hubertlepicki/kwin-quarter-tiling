@@ -61,5 +61,5 @@ export const geometryUtils = {
   gapArea,
   fullArea,
   moveTo,
-  center
+  center,
 };

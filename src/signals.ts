@@ -1,8 +1,8 @@
-import { clientManager } from "./clientManager";
 import { Client } from "./client";
+import { clientManager } from "./clientManager";
 import { config } from "./config";
-import { workspace, print } from "./globals";
 import { toplevelManager } from "./toplevelManager";
+import { workspace } from "./workspace";
 
 export function registerSignals(): void {
   if (config.autoTile) {

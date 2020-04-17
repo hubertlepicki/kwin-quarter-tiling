@@ -1,7 +1,7 @@
 import { Client } from "./client";
 import { Geometry } from "./geometry";
-import { workspace } from "./globals";
 import { Toplevel, toplevel } from "./toplevel";
+import { workspace } from "./workspace";
 
 // toplevels[screen][desktop]: Toplevel
 let toplevels: Array<Array<Toplevel | null>> = [];

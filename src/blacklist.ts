@@ -1,6 +1,6 @@
 import { Client } from "./client";
 import { config } from "./config";
-import { workspace } from "./globals";
+import { workspace } from "./workspace";
 
 function includes(client: Client): boolean {
   const isMaximized: boolean =

@@ -4,7 +4,6 @@ import { Geometry } from "./geometry";
 /*
  * An interface which all tiling layouts should implement
  */
-
 export interface Layout {
   /*
    * Maximum amount of clients the Layout can tile

@@ -2,8 +2,8 @@ import { blacklist } from "./blacklist";
 import { Client } from "./client";
 import { config } from "./config";
 import { Geometry, geometryUtils } from "./geometry";
-import { workspace, print } from "./globals";
 import { toplevelManager } from "./toplevelManager";
+import { workspace } from "./workspace";
 
 const clients: Array<Client> = [];
 const disabled: Object = {};
