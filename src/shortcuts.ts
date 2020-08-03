@@ -103,11 +103,11 @@ function registerShortcuts(): void {
   });
 
   registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
-    resizeClient("top", resizeStep);
+    resizeClient("bottom", resizeStep);
   });
 
   registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
-    resizeClient("top", -resizeStep);
+    resizeClient("bottom", -resizeStep);
   });
 
   // Move

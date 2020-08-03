@@ -857,6 +857,9 @@ function addWithForce(client) {
                     client.desktop = freeDesktop;
                     client.geometry = geometryUtils.moveTo(client.geometry, workspace.clientArea(1, freeScreen, client.desktop));
                     add(client, true);
+                    if (config.followClients) {
+                        workspace.activeClient = client;
+                    }
                 }
             }
         }
@@ -1102,10 +1105,10 @@ function registerShortcuts() {
         resizeClient("right", -resizeStep);
     });
     registerShortcut("Quarter: + Window Size Bottom", "Quarter: + Window Size Bottom", "Meta+J", function () {
-        resizeClient("top", resizeStep);
+        resizeClient("bottom", resizeStep);
     });
     registerShortcut("Quarter: - Window Size Bottom", "Quarter: - Window Size Bottom", "Meta+Shift+J", function () {
-        resizeClient("top", -resizeStep);
+        resizeClient("bottom", -resizeStep);
     });
     // Move
     function nextClient(direction) {
