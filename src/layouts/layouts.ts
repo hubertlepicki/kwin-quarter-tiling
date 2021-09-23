@@ -2,6 +2,7 @@ import { QuarterHorizontal } from "./quarterHorizontal";
 import { QuarterSingleHorizontal } from "./quarterSingleHorizontal";
 import { QuarterSingleVertical } from "./quarterSingleVertical";
 import { QuarterVertical } from "./quarterVertical";
+import { QuarterHorizontalInverted } from "./quarterHorizontal";
 
 /*
  * Adding a new layout to the script and its options:
@@ -19,5 +20,6 @@ export const layouts = {
   "0": QuarterHorizontal,
   "1": QuarterVertical,
   "2": QuarterSingleHorizontal,
-  "3": QuarterSingleVertical
+  "3": QuarterSingleVertical,
+  "4": QuarterHorizonatalInverted
 };
